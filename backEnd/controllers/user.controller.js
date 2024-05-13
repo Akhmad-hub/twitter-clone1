@@ -39,13 +39,6 @@ export const followUnFollowUser = async (req, res) => {
       await User.findByIdAndUpdate(req.user._id, {
         $pull: { following: id },
       });
-      const newNotification = new Notification({
-        type: "follow",
-        from: req.user._id,
-        to: userTomodify._id,
-      });
-      await newNotification.save();
-      // todo return the id of the user as aresponse
       res.status(200).json({ message: "user Unfollowed succesfully" });
     } else {
       //   follow the User
@@ -102,8 +95,15 @@ export const getSuggestedUser = async (req, res) => {
 
 export const updateUser = async (req, res) => {
   try {
-    const { fullName,email, userName, currentPassword, newPassword, bio, link } =
-      req.body;
+    const {
+      fullName,
+      email,
+      userName,
+      currentPassword,
+      newPassword,
+      bio,
+      link,
+    } = req.body;
     let { profileImg, coverImg } = req.body;
     const userId = req.user._id;
 
@@ -134,32 +134,36 @@ export const updateUser = async (req, res) => {
     }
 
     if (profileImg) {
-      if(user.profileImg) {
-        await cloudinary.uploader.destroy(user.profileImg.split("/").pop().split(".")[0]);
+      if (user.profileImg) {
+        await cloudinary.uploader.destroy(
+          user.profileImg.split("/").pop().split(".")[0]
+        );
       }
       const uploadedImg = await cloudinary.uploader.upload(profileImg);
       profileImg = uploadedImg.secure_url;
     }
     if (coverImg) {
-      if(user.coverImg) {
-        await cloudinary.uploader.destroy(user.coverImg.split("/").pop().split(".")[0]);
+      if (user.coverImg) {
+        await cloudinary.uploader.destroy(
+          user.coverImg.split("/").pop().split(".")[0]
+        );
       }
       const uploadedImg = await cloudinary.uploader.upload(coverImg);
       coverImg = uploadedImg.secure_url;
     }
 
-    user.fullName= fullName || user.fullName;
-    user.userName= userName || user.userName;
+    user.fullName = fullName || user.fullName;
+    user.userName = userName || user.userName;
     user.email = email || user.email;
     user.bio = bio || user.bio;
     user.link = link || user.link;
     user.profileImg = profileImg || user.profileImg;
     user.coverImg = coverImg || user.coverImg;
 
-    await user.save(); 
-    user.password = null
+    await user.save();
+    user.password = null;
 
-    res.status(200).json(user)
+    res.status(200).json(user);
   } catch (error) {
     console.log("Eror in updateUser contrroller ", error.message);
     res.status(500).json({ error: error.message });

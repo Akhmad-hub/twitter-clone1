@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import userRoutes from "./routes/users.routes.js";
 import {v2 as cloudinary} from "cloudinary"
 import postRoutes from "./routes/post.routes.js";
+import notificationsRoutes from "./routes/notifications.routes.js";
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -23,6 +24,7 @@ app.use(cookieParser())
 app.use("/api/auth", authRoutes)
 app.use("/api/users", userRoutes)
 app.use("/api/post", postRoutes)
+app.use("/api/notifications", notificationsRoutes)
 
 
 app.listen(PORT, () => {
