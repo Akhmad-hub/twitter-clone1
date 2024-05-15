@@ -50,10 +50,10 @@ const PostsCommon = ({ feedType }) => {
           <PostSkeleton />
         </div>
       )}
-      {!isLoading && posts?.length === 0 && (
+      {!isLoading&& !isRefetching && posts?.length === 0 && (
         <p className="text-center my-4">No posts in this tab. Switch 👻</p>
       )}
-      {!isLoading && posts && (
+      {!isLoading&& !isRefetching && posts && (
         <div>
           {posts.map((post) => (
             <PostCommon key={post._id} post={post} />

@@ -5,19 +5,51 @@ import { FaRegBookmark } from "react-icons/fa6";
 import { FaTrash } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
+import LoadingSpinnerCommon from "./LoadingSpinnerCommon";
 
 const PostCommon = ({ post }) => {
   const [comment, setComment] = useState("");
+
+  const queryClient = useQueryClient()
+  const { data: authUser } = useQuery({ queryKey: ["authUser"] });
+  const { mutate: deletePost, isPending } = useMutation({
+    mutationFn: async () => {
+      try {
+        const res = await fetch(`/api/posts/${post._id}`, {
+          method: "DELETE",
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to delete post");
+        }
+        return data;
+      } catch (error) {
+        throw new Error(error);
+      }
+    },
+    onSuccess: () => {
+      toast.success("Post deleted successfully");
+    },
+    onError: () => {
+      toast.error("Failed to delete post");
+      queryClient.invalidateQueries({queryKey: ["posts"]})
+    },
+  });
+
   const postOwner = post.user;
   const isLiked = false;
 
-  const isMyPost = true;
+  const isMyPost = authUser._id ===post.user._id;
 
   const formattedDate = "1h";
 
   const isCommenting = false;
 
-  const handleDeletePost = () => {};
+  const handleDeletePost = () => {
+    deletePost();
+  };
 
   const handlePostComment = (e) => {
     e.preventDefault();
@@ -50,10 +82,11 @@ const PostCommon = ({ post }) => {
             </span>
             {isMyPost && (
               <span className="flex justify-end flex-1">
-                <FaTrash
+               {!isPending&& <FaTrash
                   className="cursor-pointer hover:text-red-500"
                   onClick={handleDeletePost}
-                />
+                />}
+                {isPending&& (<LoadingSpinnerCommon size="sm"/>)}
               </span>
             )}
           </div>
@@ -77,7 +110,12 @@ const PostCommon = ({ post }) => {
                     .showModal()
                 }
               >
-                <FaRegComment className="w-4 h-4  text-slate-500 group-hover:text-sky-400" />
+                <div className="relative group ">
+                  <FaRegComment className="w-4 h-4  text-slate-500 group-hover:text-sky-400" />
+                  <p className="absolute -top-5 scale-0 transition-all rounded text-xs text-white group-hover:scale-100">
+                    Comment
+                  </p>
+                </div>
                 <span className="text-sm text-slate-500 group-hover:text-sky-400">
                   {post.comments.length}
                 </span>

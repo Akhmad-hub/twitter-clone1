@@ -7,6 +7,7 @@ import userRoutes from "./routes/users.routes.js";
 import {v2 as cloudinary} from "cloudinary"
 import postRoutes from "./routes/post.routes.js";
 import notificationsRoutes from "./routes/notifications.routes.js";
+import helmet from "helmet";
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -19,6 +20,7 @@ const PORT= process.env.PORT || 3000
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true })) //to parse from data
+app.use(helmet())
 
 app.use(cookieParser())
 app.use("/api/auth", authRoutes)
