@@ -5,23 +5,23 @@ import bcrypt from "bcryptjs";
 
 export const signUp = async (req, res) => {
   try {
-    const { fullName, userName, email, password } = req.body;
+    const { fullName, username, email, password } = req.body;
 
     if (!validateEmail(email)) {
       return res.status(400).json({ error: "Invalid format Email" });
     }
 
-  
-    const existingUser = await User.findOne({ userName });
-		if (existingUser) {
-			return res.status(400).json({ error: "userName is already taken" });
-		}
-
-
     const existingEmail = await User.findOne({ email });
     if (existingEmail) {
       return res.status(400).json({ error: "email is already taken" });
     }
+  
+    const existingUser = await User.findOne({ username });
+		if (existingUser) {
+			return res.status(400).json({ error: "username is already taken" });
+		}
+
+
 
     if (!validatePassword(password)) {
       return res.status(400).json({
@@ -37,7 +37,7 @@ export const signUp = async (req, res) => {
 
     const newUser = new User({
       fullName,
-      userName,
+      username,
       email,
       password: hashPassword,
     });
@@ -47,7 +47,7 @@ export const signUp = async (req, res) => {
       await newUser.save();
       res.status(201).json({
         _id: newUser._id,
-        userName: newUser.userName,
+        username: newUser.username,
         fullName: newUser.fullName,
         email: newUser.email,
         followers: newUser.followers,
@@ -82,7 +82,7 @@ export const login = async (req, res) => {
     generateTokenAndSetCookie(user._id, res);
     res.status(200).json({
       _id: user._id,
-      userName: user.userName,
+      username: user.username,
       fullName: user.fullName,
       email: user.email,
       followers: user.followers,
