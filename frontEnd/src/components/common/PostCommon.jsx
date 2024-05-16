@@ -1,4 +1,4 @@
-import { FaRegComment } from "react-icons/fa";
+import { FaHeart, FaRegComment } from "react-icons/fa";
 import { BiRepost } from "react-icons/bi";
 import { FaRegHeart } from "react-icons/fa";
 import { FaRegBookmark } from "react-icons/fa6";
@@ -14,7 +14,7 @@ const PostCommon = ({ post }) => {
 
   const queryClient = useQueryClient();
   const { data: authUser } = useQuery({ queryKey: ["authUser"] });
-  const { mutate: deletePost, isPending } = useMutation({
+  const { mutate: deletePost, isPending:isDeleting } = useMutation({
     mutationFn: async () => {
       try {
         const res = await fetch(`/api/posts/${post._id}`, {
@@ -38,8 +38,35 @@ const PostCommon = ({ post }) => {
     },
   });
 
+  const { mutate: likePost, isPending: isLiking } = useMutation({
+    mutationFn: async () => {
+      try {
+        const res = await fetch(`/api/posts/like/${post._id}`, {
+          method: "POST",
+        });
+        const data = await res.json()
+        if(!res.ok) {
+          throw new Error(data.error || "Failed to like post");
+        }
+        return data
+      } catch (error) {
+        throw new Error(error);
+      }
+    },
+    onSuccess: (updateLikes) => { 
+      queryClient.setQueryData(["posts"], (oldData) => {
+        return oldData.map((p) => {
+          if(p._id === post._id){
+            return {...p, likes:updateLikes}
+          }
+          return p
+        })
+      })
+    },
+   
+  });
   const postOwner = post.user;
-  const isLiked = false;
+  const isLiked = post.likes.includes(authUser?._id);
 
   const isMyPost = authUser._id === post.user._id;
 
@@ -55,7 +82,10 @@ const PostCommon = ({ post }) => {
     e.preventDefault();
   };
 
-  const handleLikePost = () => {};
+  const handleLikePost = () => {
+    if(isLiking) return;
+    likePost();
+  };
 
   return (
     <>
@@ -82,13 +112,13 @@ const PostCommon = ({ post }) => {
             </span>
             {isMyPost && (
               <span className="flex justify-end flex-1">
-                {!isPending && (
+                {!isDeleting && (
                   <FaTrash
                     className="cursor-pointer hover:text-red-500"
                     onClick={handleDeletePost}
                   />
                 )}
-                {isPending && <LoadingSpinnerCommon size="sm" />}
+                {isDeleting && <LoadingSpinnerCommon size="sm" />}
               </span>
             )}
           </div>
@@ -173,9 +203,9 @@ const PostCommon = ({ post }) => {
                     />
                     <button className="btn btn-primary rounded-full btn-sm text-white px-4">
                       {isCommenting ? (
-                        <span className="loading loading-spinner loading-md"></span>
+                        <LoadingSpinnerCommon size="sm" />
                       ) : (
-                        "Post"
+                        "Send"
                       )}
                     </button>
                   </form>
@@ -202,19 +232,22 @@ const PostCommon = ({ post }) => {
                 className="flex gap-1 items-center group cursor-pointer"
                 onClick={handleLikePost}
               >
-                <div className="relative group flex items-center justify-center">
-                  {!isLiked && (
+                {isLiking && (
+                  <LoadingSpinnerCommon size="sm"/>
+                )}
+                <div className="relative group flex items-center justify-center" >
+                {!isLiked && !isLiking && (
                     <FaRegHeart className="w-4 h-4 cursor-pointer text-slate-500 group-hover:text-pink-500" />
                   )}
-                  {isLiked && (
-                    <FaRegHeart className="w-4 h-4 cursor-pointer text-pink-500 " />
+                  {isLiked && !isLiking && (
+                    <FaHeart className="w-4 h-4 cursor-pointer text-pink-500" />
                   )}
                   <p className="absolute -top-5 scale-0 transition-all rounded text-xs text-white group-hover:scale-100">
                     Likes
                   </p>
                   <span
                     className={`text-sm ml-2 text-slate-500 group-hover:text-pink-500 ${
-                      isLiked ? "text-pink-500" : ""
+                      isLiked ? "text-pink-500" : "text-slate-500"
                     }`}
                   >
                     {post.likes.length}

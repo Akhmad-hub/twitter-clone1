@@ -98,8 +98,10 @@ export const likeUnLikePost = async (req, res) => {
       //   unlike
       await Post.updateOne({ _id: postId }, { $pull: { likes: userId } });
       await User.updateOne({ _id: userId }, { $pull: { likedPosts: postId } });
-
-      res.status(200).json({ message: "unliked  successfully" });
+      const updatedLikes = post.likes.filter(
+        (id) => id.toString() !== userId.toString()
+      );
+      res.status(200).json(updatedLikes);
     } else {
       // like
       post.likes.push(userId);
@@ -112,7 +114,8 @@ export const likeUnLikePost = async (req, res) => {
         type: "like",
       });
       await newNotification.save();
-      res.status(200).json({ message: "liked  successfully" });
+      const updatedLikes = post.likes;
+      res.status(200).json(updatedLikes);
     }
   } catch (error) {
     console.log("Eror in likeUnLikePost contrroller ", error.message);
@@ -188,16 +191,19 @@ export const getUserPosts = async (req, res) => {
     const user = await User.findOne({ userName });
     if (!user) return res.status(404).json({ error: "User not found" });
 
-      const posts = await Post.find({ user: user._id }).sort({ createdAt: -1 }).populate({
+    const posts = await Post.find({ user: user._id })
+      .sort({ createdAt: -1 })
+      .populate({
         path: "user",
         select: "-password",
-      }).populate({
+      })
+      .populate({
         path: "comments.user",
         select: "-password",
       });
-      res.status(200).json(posts);
+    res.status(200).json(posts);
   } catch (error) {
-      console.log("Eror in getUserPosts contrroller ", error.message);
-      res.status(500).json({ error: "Internal  Serrver Eror" });
+    console.log("Eror in getUserPosts contrroller ", error.message);
+    res.status(500).json({ error: "Internal  Serrver Eror" });
   }
 };
