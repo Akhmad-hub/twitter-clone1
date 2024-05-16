@@ -2,27 +2,44 @@ import React, { useRef, useState } from "react";
 import { IoCloseSharp } from "react-icons/io5";
 import { CiImageOn } from "react-icons/ci";
 import { BsEmojiSmileFill } from "react-icons/bs";
-import { FaFileCsv } from "react-icons/fa";
+import { FaFile } from "react-icons/fa";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 
 const CreatePostPages = () => {
   const [text, setText] = useState("");
   const [img, setImg] = useState(null);
-
   const imgRef = useRef(null);
 
-  
+  const { data: authUser } = useQuery({ queryKey: ["authUser"] });
+  const queryClient = useQueryClient();
 
-  const isPending = false;
-  const isError = false;
-
-  const data = {
-    profileImg:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1374&q=80",
-  };
+  const { mutate: createPost, isPending, isError, error } = useMutation({
+    mutationFn: async ({ text, img }) => {
+      try {
+        const res = await fetch("/api/posts/create", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ text, img }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to create post");
+        return data;
+      } catch (error) {
+        throw new Error(error);
+      }
+    },
+    onSuccess: () => {
+      setText("");
+      setImg(null);
+      toast.success("Post created successfully");
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    },
+  });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert("submit");
+    createPost({text, img})
   };
 
   const handleImgChange = (e) => {
@@ -40,7 +57,7 @@ const CreatePostPages = () => {
     <div className="flex p-4 items-start gap-4 border-b border-gray-700">
       <div className="avatar">
         <div className="w-8 rounded-full">
-          <img src={data.profileImg} alt="" />
+          <img src={authUser.profileImg || "/avatar-placeholder.png"} alt="" />
         </div>
       </div>
       <form className="flex flex-col gap-2 w-full" onSubmit={handleSubmit}>
@@ -70,13 +87,29 @@ const CreatePostPages = () => {
 
         <div className="flex justify-between border-t py-2 border-t-gray-700">
           <div className="flex gap-4 items-center">
-            <CiImageOn
-              className="fill-primary w-6 h-6 cursor-pointer"
-              onClick={() => imgRef.current.click()}
-            />
-            <BsEmojiSmileFill className="fill-primary w-5 h-5 cursor-pointer" />
-            <FaFileCsv className="fill-primary w-5 h-5 cursor-pointer" />
+            <div className="relative group ">
+              <CiImageOn
+                className="fill-primary w-6 h-6  cursor-pointer group-hover:text-green-500"
+                onClick={() => imgRef.current.click()}
+              />
+              <p className="absolute -top-5 scale-0 transition-all rounded text-xs text-white group-hover:scale-100">
+                Images
+              </p>
+            </div>
 
+            <div className="relative group ">
+              <BsEmojiSmileFill className="fill-primary w-5 h-5  cursor-pointer group-hover:text-green-500" />
+              <p className="absolute -top-5 scale-0 transition-all rounded text-xs text-white group-hover:scale-100">
+                Stikker
+              </p>
+            </div>
+
+            <div className="relative group ">
+              <FaFile className="fill-primary w-5 h-5  cursor-pointer group-hover:text-green-500" />
+              <p className="absolute -top-5 scale-0 transition-all rounded text-xs text-white group-hover:scale-100">
+                Files
+              </p>
+            </div>
           </div>
           <input
             type="file"
@@ -89,8 +122,7 @@ const CreatePostPages = () => {
             {isPending ? "Posting..." : "Post"}
           </button>
         </div>
-				{isError && <div className='text-red-500'>error</div>}
-
+        {isError && <div className="text-red-500">{error.message}</div>}
       </form>
     </div>
   );

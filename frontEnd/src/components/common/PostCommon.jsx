@@ -12,7 +12,7 @@ import LoadingSpinnerCommon from "./LoadingSpinnerCommon";
 const PostCommon = ({ post }) => {
   const [comment, setComment] = useState("");
 
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
   const { data: authUser } = useQuery({ queryKey: ["authUser"] });
   const { mutate: deletePost, isPending } = useMutation({
     mutationFn: async () => {
@@ -34,14 +34,14 @@ const PostCommon = ({ post }) => {
     },
     onError: () => {
       toast.error("Failed to delete post");
-      queryClient.invalidateQueries({queryKey: ["posts"]})
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
     },
   });
 
   const postOwner = post.user;
   const isLiked = false;
 
-  const isMyPost = authUser._id ===post.user._id;
+  const isMyPost = authUser._id === post.user._id;
 
   const formattedDate = "1h";
 
@@ -82,11 +82,13 @@ const PostCommon = ({ post }) => {
             </span>
             {isMyPost && (
               <span className="flex justify-end flex-1">
-               {!isPending&& <FaTrash
-                  className="cursor-pointer hover:text-red-500"
-                  onClick={handleDeletePost}
-                />}
-                {isPending&& (<LoadingSpinnerCommon size="sm"/>)}
+                {!isPending && (
+                  <FaTrash
+                    className="cursor-pointer hover:text-red-500"
+                    onClick={handleDeletePost}
+                  />
+                )}
+                {isPending && <LoadingSpinnerCommon size="sm" />}
               </span>
             )}
           </div>
@@ -183,33 +185,50 @@ const PostCommon = ({ post }) => {
                 </form>
               </dialog>
               <div className="flex gap-1 items-center group cursor-pointer">
-                <BiRepost className="w-6 h-6  text-slate-500 group-hover:text-green-500" />
-                <span className="text-sm text-slate-500 group-hover:text-green-500">
-                  0
-                </span>
+                {/* repost */}
+                <div className="relative group flex items-center justify-center">
+                  <BiRepost className="w-6 h-6  text-slate-500 group-hover:text-green-500" />
+                  <p className="absolute -top-5 scale-0 transition-all rounded text-xs text-white group-hover:scale-100">
+                    Repost
+                  </p>
+                  <span className="text-sm ml-2 text-slate-500 group-hover:text-green-500">
+                    0
+                  </span>
+                </div>
               </div>
+
+              {/* likes */}
               <div
                 className="flex gap-1 items-center group cursor-pointer"
                 onClick={handleLikePost}
               >
-                {!isLiked && (
-                  <FaRegHeart className="w-4 h-4 cursor-pointer text-slate-500 group-hover:text-pink-500" />
-                )}
-                {isLiked && (
-                  <FaRegHeart className="w-4 h-4 cursor-pointer text-pink-500 " />
-                )}
-
-                <span
-                  className={`text-sm text-slate-500 group-hover:text-pink-500 ${
-                    isLiked ? "text-pink-500" : ""
-                  }`}
-                >
-                  {post.likes.length}
-                </span>
+                <div className="relative group flex items-center justify-center">
+                  {!isLiked && (
+                    <FaRegHeart className="w-4 h-4 cursor-pointer text-slate-500 group-hover:text-pink-500" />
+                  )}
+                  {isLiked && (
+                    <FaRegHeart className="w-4 h-4 cursor-pointer text-pink-500 " />
+                  )}
+                  <p className="absolute -top-5 scale-0 transition-all rounded text-xs text-white group-hover:scale-100">
+                    Likes
+                  </p>
+                  <span
+                    className={`text-sm ml-2 text-slate-500 group-hover:text-pink-500 ${
+                      isLiked ? "text-pink-500" : ""
+                    }`}
+                  >
+                    {post.likes.length}
+                  </span>
+                </div>
               </div>
             </div>
             <div className="flex w-1/3 justify-end gap-2 items-center">
-              <FaRegBookmark className="w-4 h-4 text-slate-500 cursor-pointer" />
+              <div className="relative group ">
+                <FaRegBookmark className="w-4 h-4  text-slate-500 group-hover:text-green-500" />
+                <p className="absolute -top-5 scale-0 transition-all rounded text-xs text-white group-hover:scale-100">
+                  Save
+                </p>
+              </div>
             </div>
           </div>
         </div>
