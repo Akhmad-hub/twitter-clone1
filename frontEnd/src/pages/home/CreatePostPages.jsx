@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { IoCloseSharp } from "react-icons/io5";
 import { CiImageOn } from "react-icons/ci";
 import { BsEmojiSmileFill } from "react-icons/bs";
@@ -8,13 +8,28 @@ import toast from "react-hot-toast";
 
 const CreatePostPages = () => {
   const [text, setText] = useState("");
+  const textareaRef = useRef(null);
+
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = "auto";
+      textarea.style.height = textarea.scrollHeight + "px";
+    }
+  }, [text]);
+
   const [img, setImg] = useState(null);
   const imgRef = useRef(null);
 
   const { data: authUser } = useQuery({ queryKey: ["authUser"] });
   const queryClient = useQueryClient();
 
-  const { mutate: createPost, isPending, isError, error } = useMutation({
+  const {
+    mutate: createPost,
+    isPending,
+    isError,
+    error,
+  } = useMutation({
     mutationFn: async ({ text, img }) => {
       try {
         const res = await fetch("/api/posts/create", {
@@ -39,7 +54,7 @@ const CreatePostPages = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    createPost({text, img})
+    createPost({ text, img });
   };
 
   const handleImgChange = (e) => {
@@ -54,14 +69,15 @@ const CreatePostPages = () => {
     }
   };
   return (
-    <div className="flex p-4 items-start gap-4 border-b border-gray-700">
+    <div className="flex p-4 items-start gap-4 border-b border-gray-700 ">
       <div className="avatar">
         <div className="w-8 rounded-full">
           <img src={authUser.profileImg || "/avatar-placeholder.png"} alt="" />
         </div>
       </div>
-      <form className="flex flex-col gap-2 w-full" onSubmit={handleSubmit}>
+      <form className="flex flex-col gap-2 w-full " onSubmit={handleSubmit}>
         <textarea
+          ref={textareaRef}
           className="textarea w-full p-0 text-lg resize-none border-none focus:outline-none  border-gray-800 h-auto"
           placeholder="What is happening?!"
           value={text}

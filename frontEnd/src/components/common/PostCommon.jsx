@@ -8,13 +8,23 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import LoadingSpinnerCommon from "./LoadingSpinnerCommon";
+import { formatPostDate } from "../../utils/date";
+import formatHashtags from "../../utils/hastag/hastag";
 
 const PostCommon = ({ post }) => {
   const [comment, setComment] = useState("");
 
   const queryClient = useQueryClient();
   const { data: authUser } = useQuery({ queryKey: ["authUser"] });
-  const { mutate: deletePost, isPending:isDeleting } = useMutation({
+
+  const postOwner = post.user;
+  const isLiked = post.likes.includes(authUser?._id);
+
+  const isMyPost = authUser._id === post.user._id;
+
+  const formattedDate = formatPostDate(post.createdAt);
+
+  const { mutate: deletePost, isPending: isDeleting } = useMutation({
     mutationFn: async () => {
       try {
         const res = await fetch(`/api/posts/${post._id}`, {
@@ -44,35 +54,52 @@ const PostCommon = ({ post }) => {
         const res = await fetch(`/api/posts/like/${post._id}`, {
           method: "POST",
         });
-        const data = await res.json()
-        if(!res.ok) {
+        const data = await res.json();
+        if (!res.ok) {
           throw new Error(data.error || "Failed to like post");
         }
-        return data
+        return data;
       } catch (error) {
         throw new Error(error);
       }
     },
-    onSuccess: (updateLikes) => { 
+    onSuccess: (updateLikes) => {
       queryClient.setQueryData(["posts"], (oldData) => {
         return oldData.map((p) => {
-          if(p._id === post._id){
-            return {...p, likes:updateLikes}
+          if (p._id === post._id) {
+            return { ...p, likes: updateLikes };
           }
-          return p
-        })
-      })
+          return p;
+        });
+      });
     },
-   
   });
-  const postOwner = post.user;
-  const isLiked = post.likes.includes(authUser?._id);
 
-  const isMyPost = authUser._id === post.user._id;
-
-  const formattedDate = "1h";
-
-  const isCommenting = false;
+  const { mutate: commentPost, isPending: isCommenting } = useMutation({
+    mutationFn: async () => {
+      try {
+        const res = await fetch(`/api/posts/comment/${post._id}`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ text: comment }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || "Something went wrong");
+        }
+        return data;
+      } catch (error) {
+        throw new Error(error);
+      }
+    },
+    onSuccess: () => {
+      setComment("");
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    },
+    onError: () => {
+      toast.error("Failed to comment");
+    },
+  });
 
   const handleDeletePost = () => {
     deletePost();
@@ -80,16 +107,20 @@ const PostCommon = ({ post }) => {
 
   const handlePostComment = (e) => {
     e.preventDefault();
+    if (isCommenting) return;
+    commentPost();
   };
 
   const handleLikePost = () => {
-    if(isLiking) return;
+    if (isLiking) return;
     likePost();
   };
 
+
+  
   return (
     <>
-      <div className="flex gap-2 items-start p-4 border-b border-gray-700">
+      <div className="flex gap-2 items-start p-4 border-b border-gray-700 w-full">
         <div className="avatar">
           <Link
             to={`/profile/${postOwner.username}`}
@@ -123,7 +154,7 @@ const PostCommon = ({ post }) => {
             )}
           </div>
           <div className="flex flex-col gap-3 overflow-hidden">
-            <span>{post.text}</span>
+            <pre >{formatHashtags(post.text)}</pre>
             {post.img && (
               <img
                 src={post.img}
@@ -185,8 +216,11 @@ const PostCommon = ({ post }) => {
                             <span className="text-gray-700 text-sm">
                               @{comment.user.username}
                             </span>
+                            <span className="text-gray-700 text-sm">
+                              {formatPostDate(comment.createdAt)}
+                            </span>
                           </div>
-                          <div className="text-sm">{comment.text}</div>
+                          <pre className="text-sm">{comment.text}</pre>
                         </div>
                       </div>
                     ))}
@@ -232,11 +266,9 @@ const PostCommon = ({ post }) => {
                 className="flex gap-1 items-center group cursor-pointer"
                 onClick={handleLikePost}
               >
-                {isLiking && (
-                  <LoadingSpinnerCommon size="sm"/>
-                )}
-                <div className="relative group flex items-center justify-center" >
-                {!isLiked && !isLiking && (
+                {isLiking && <LoadingSpinnerCommon size="sm" />}
+                <div className="relative group flex items-center justify-center">
+                  {!isLiked && !isLiking && (
                     <FaRegHeart className="w-4 h-4 cursor-pointer text-slate-500 group-hover:text-pink-500" />
                   )}
                   {isLiked && !isLiking && (

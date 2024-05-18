@@ -1,11 +1,9 @@
 import React, { useEffect } from "react";
 import PostSkeleton from "../skeletons/PostSkeleton";
-import { POSTS } from "../../utils/db/dummy";
 import PostCommon from "./PostCommon";
 import { useQuery } from "@tanstack/react-query";
 
 const PostsCommon = ({ feedType }) => {
-  console.log(POSTS);
 
   const getPostEndPoint = () => {
     switch (feedType) {

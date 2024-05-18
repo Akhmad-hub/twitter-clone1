@@ -4,10 +4,11 @@ export const getNotifications = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    const notifications = await Notification.find({ to: userId }).populate({
-      path: "from",
-      select: "username profileImg",
-    });
+    const notifications = await Notification.find({ to: userId })
+      .populate({
+        path: "from",
+        select: "username profileImg",
+      })
 
     await Notification.updateMany({ to: userId }, { rea: true });
 
@@ -38,10 +39,11 @@ export const deleteNotifications = async (req, res) => {
       return res.status(404).json({ message: "notification not found" });
     }
 
-    if(notifications.to.toString() !== userId.toString()){
-      return res.status(401).json({ message: "you are deleting not your notification" });
+    if (notifications.to.toString() !== userId.toString()) {
+      return res
+        .status(401)
+        .json({ message: "you are deleting not your notification" });
     }
-
 
     await Notification.findbyIdAndDelete(notificationId);
     res.status(200).json({ message: "notification deleted successfully" });

@@ -21,10 +21,14 @@ export const createPost = async (req, res) => {
       img = uploadResponse.secure_url;
     }
 
+
+
+    const hashtags = text.match(/#[a-z0-9_]+/gi) || [];
     const newPost = new Post({
       user: userId,
       text,
       img,
+      hashtags,
     });
 
     await newPost.save();
@@ -75,6 +79,14 @@ export const commentOnPost = async (req, res) => {
     const comment = { user: userId, text };
     post.comments.push(comment);
     await post.save();
+    const newNotification = new Notification({
+      from: userId,
+      to: post.user,
+      type: "comment",
+      text: text, // optional, you can include the comment text in the notification
+    });
+    await newNotification.save();
+
     res.status(200).json(post);
   } catch (error) {
     console.log("Eror in commentOnPost contrroller ", error.message);
@@ -112,6 +124,7 @@ export const likeUnLikePost = async (req, res) => {
         from: userId,
         to: post.user,
         type: "like",
+        post: postId,
       });
       await newNotification.save();
       const updatedLikes = post.likes;

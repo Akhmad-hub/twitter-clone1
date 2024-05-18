@@ -4,32 +4,44 @@ import { IoSettingsOutline } from "react-icons/io5";
 import { FaUser } from "react-icons/fa";
 import { FaHeart } from "react-icons/fa6";
 import LoadingSpinnerCommon from "../../components/common/LoadingSpinnerCommon";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { BiComment } from "react-icons/bi";
 
 const NotificationPages = () => {
-  const isLoading = false;
-  const notifications = [
-    {
-      _id: "1",
-      from: {
-        _id: "1",
-        username: "johndoe",
-        profileImg: "/avatars/boy2.png",
-      },
-      type: "follow",
+  const queryClient = useQueryClient();
+
+  const { data: notifications, isLoading } = useQuery({
+    queryKey: ["notifications"],
+    queryFn: async () => {
+      try {
+        const res = await fetch("/api/notifications");
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Something went wrong");
+        return data;
+      } catch (error) {
+        throw new Error(error);
+      }
     },
-    {
-      _id: "2",
-      from: {
-        _id: "2",
-        username: "janedoe",
-        profileImg: "/avatars/girl1.png",
-      },
-      type: "like",
+  });
+
+  const { mutate: deleteNotifications } = useMutation({
+    mutationFn: async () => {
+      try {
+        const res = await fetch("/api/notifications", {
+          method: "DELETE",
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Something went wrong");
+        return data;
+      } catch (error) {
+        throw new Error(error);
+      }
     },
-  ];
-  const deleteNotifications = () => {
-    alert("All notifications deleted");
-  };
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    },
+  });
+
   return (
     <>
       <div className="flex-[4_4_0] border-l border-r border-gray-700 min-h-screen">
@@ -66,8 +78,11 @@ const NotificationPages = () => {
               {notification.type === "like" && (
                 <FaHeart className="w-7 h-7 text-red-500" />
               )}
+              {notification.type === "comment" && (
+                <BiComment className="w-7 h-7 text-primary" />
+              )}
               <Link to={`/profile/${notification.from.username}`}>
-              <div className="avatar">
+                <div className="avatar">
                   <div className="w-8 rounded-full">
                     <img
                       src={
@@ -77,15 +92,22 @@ const NotificationPages = () => {
                     />
                   </div>
                 </div>
-                <div className="flex gap-1">
+              </Link>
+              <div className="flex flex-col gap-1">
+                <Link to={`/profile/${notification.from.username}`}>
                   <span className="font-bold">
                     @{notification.from.username}
-                  </span>{" "}
-                  {notification.type === "follow"
-                    ? "followed you"
-                    : "liked your post"}
-                </div>
-              </Link>
+                  </span>
+                </Link>
+                {notification.type === "follow" && " followed you"}
+                {notification.type === "like" && " liked your post"}
+                {notification.type === "comment" && (
+                  <div>
+                    <span> commented: </span>
+                    <span className="italic">{notification.text}</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         ))}
