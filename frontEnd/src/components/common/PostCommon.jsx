@@ -41,9 +41,6 @@ const PostCommon = ({ post }) => {
     },
     onSuccess: () => {
       toast.success("Post deleted successfully");
-    },
-    onError: () => {
-      toast.error("Failed to delete post");
       queryClient.invalidateQueries({ queryKey: ["posts"] });
     },
   });
@@ -96,9 +93,7 @@ const PostCommon = ({ post }) => {
       setComment("");
       queryClient.invalidateQueries({ queryKey: ["posts"] });
     },
-    onError: () => {
-      toast.error("Failed to comment");
-    },
+ 
   });
 
   const handleDeletePost = () => {
@@ -116,8 +111,6 @@ const PostCommon = ({ post }) => {
     likePost();
   };
 
-
-  
   return (
     <>
       <div className="flex gap-2 items-start p-4 border-b border-gray-700 w-full">
@@ -154,7 +147,7 @@ const PostCommon = ({ post }) => {
             )}
           </div>
           <div className="flex flex-col gap-3 overflow-hidden">
-            <pre >{formatHashtags(post.text)}</pre>
+            <pre>{formatHashtags(post.text)}</pre>
             {post.img && (
               <img
                 src={post.img}

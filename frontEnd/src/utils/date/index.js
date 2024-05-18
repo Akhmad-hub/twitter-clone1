@@ -40,3 +40,34 @@ export const formatMemberSinceDate = (createdAt) => {
 	const year = date.getFullYear();
 	return `Joined ${month} ${year}`;
 };
+
+
+
+// 1d 1h 1m 1s
+
+export const formatPostDate1 = (createdAt) => {
+    const currentDate = new Date();
+    const createdAtDate = new Date(createdAt);
+
+    const timeDifferenceInSeconds = Math.floor((currentDate - createdAtDate) / 1000);
+    const timeDifferenceInMinutes = Math.floor(timeDifferenceInSeconds / 60);
+    const timeDifferenceInHours = Math.floor(timeDifferenceInMinutes / 60);
+    const timeDifferenceInDays = Math.floor(timeDifferenceInHours / 24);
+    const timeDifferenceInMonths = Math.floor(timeDifferenceInDays / 30);
+    const timeDifferenceInYears = Math.floor(timeDifferenceInMonths / 12);
+
+    const years = timeDifferenceInYears > 0 ? `${timeDifferenceInYears}y ` : '';
+    const months = (timeDifferenceInMonths % 12) > 0 ? `${timeDifferenceInMonths % 12}mo ` : '';
+    const days = (timeDifferenceInDays % 30) > 0 ? `${timeDifferenceInDays % 30}d ` : '';
+    const hours = (timeDifferenceInHours % 24) > 0 ? `${timeDifferenceInHours % 24}h ` : '';
+    const minutes = (timeDifferenceInMinutes % 60) > 0 ? `${timeDifferenceInMinutes % 60}m ` : '';
+    const seconds = (timeDifferenceInSeconds % 60) > 0 ? `${timeDifferenceInSeconds % 60}s ` : '';
+
+	
+	
+	const formattedTime= `${seconds}${minutes}${hours}${days}${months}${years}`.trim();
+
+    return formattedTime || "Just now";
+};
+
+

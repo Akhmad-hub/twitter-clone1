@@ -63,7 +63,7 @@ const App = () => {
           element={authUser ? <NotificationPages /> : <Navigate to="/login" />}
         />
         <Route
-          path="/profile/:userName"
+          path="/profile/:username"
           element={authUser ? <ProfilePages /> : <Navigate to="/login" />}
         />
       </Routes>

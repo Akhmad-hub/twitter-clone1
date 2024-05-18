@@ -3,14 +3,17 @@ import PostSkeleton from "../skeletons/PostSkeleton";
 import PostCommon from "./PostCommon";
 import { useQuery } from "@tanstack/react-query";
 
-const PostsCommon = ({ feedType }) => {
-
+const PostsCommon = ({ feedType, username, userId }) => {
   const getPostEndPoint = () => {
     switch (feedType) {
       case "forYou":
         return "/api/posts/all";
       case "following":
         return "/api/posts/getFollowing";
+      case "posts":
+        return `/api/posts/user/${username}`;
+      case "likes":
+        return ` /api/posts/likes/${userId}`;
       default:
         return "/api/posts/all";
     }
@@ -18,7 +21,12 @@ const PostsCommon = ({ feedType }) => {
 
   const POST_ENDPOINT = getPostEndPoint();
 
-  const { data: posts, isLoading,refetch, isRefetching } = useQuery({
+  const {
+    data: posts,
+    isLoading,
+    refetch,
+    isRefetching,
+  } = useQuery({
     queryKey: ["posts"],
     queryFn: async () => {
       try {
@@ -36,8 +44,8 @@ const PostsCommon = ({ feedType }) => {
   });
 
   useEffect(() => {
-    refetch()
-  },[feedType,refetch])
+    refetch();
+  }, [feedType, refetch]);
   console.log("ini adalah posts", posts);
   return (
     <>
@@ -48,10 +56,10 @@ const PostsCommon = ({ feedType }) => {
           <PostSkeleton />
         </div>
       )}
-      {!isLoading&& !isRefetching && posts?.length === 0 && (
+      {!isLoading && !isRefetching && posts?.length === 0 && (
         <p className="text-center my-4">No posts in this tab. Switch 👻</p>
       )}
-      {!isLoading&& !isRefetching && posts && (
+      {!isLoading && !isRefetching && posts && (
         <div>
           {posts.map((post) => (
             <PostCommon key={post._id} post={post} />

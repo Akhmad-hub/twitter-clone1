@@ -4,7 +4,7 @@ import { followUnFollowUser, getSuggestedUser, getUserProfile, updateUser } from
 
 const userRoutes = express.Router()
 
-userRoutes.get("/profile/:userName", protecRoute, getUserProfile)
+userRoutes.get("/profile/:username", protecRoute, getUserProfile)
 userRoutes.get("/suggestedUser", protecRoute, getSuggestedUser)
 userRoutes.post("/follow/:id", protecRoute, followUnFollowUser)
 userRoutes.post("/update", protecRoute, updateUser)
