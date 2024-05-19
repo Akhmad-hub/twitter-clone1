@@ -11,7 +11,7 @@ const useFollow = () => {
         });
         const data = await res.json();
         if (!res.ok) {
-          throw new Error(data.message || "something");
+          throw new Error(data.error || "something");
         }
         return data;
       } catch (error) {

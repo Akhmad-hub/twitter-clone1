@@ -24,7 +24,7 @@ const RightPanelCommon = () => {
     if (suggestedUser?.length === 0)
     return (
       <div>
-        <p className="md:w-64 w-0 text-center text-slate-500">No users found</p>
+        <p className="md:w-64 w-0 text-center hidden lg:block  text-slate-500">No users found</p>
       </div>
     );
   return (

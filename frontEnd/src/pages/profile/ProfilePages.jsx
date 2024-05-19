@@ -7,10 +7,11 @@ import EditprofilePages from "./EditprofilePages";
 import { IoCalendarOutline } from "react-icons/io5";
 import PostsCommon from "../../components/common/PostsCommon";
 import ProfileSkeleton from "../../components/skeletons/ProfileSkeleton";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { formatPostDate1 } from "../../utils/date";
 
-import useFollow from "../../hooks/useFollow";
+import useFollow from "../../hooks/useFollowHook";
+import useUpdateProfile from "../../hooks/useUpdateProfileHook";
 
 const ProfilePages = () => {
   const [coverImg, setCoverImg] = useState(null);
@@ -19,11 +20,9 @@ const ProfilePages = () => {
 
   const coverImgRef = useRef(null);
   const profileImgRef = useRef(null);
-  const querClient = useQueryClient();
   const { username } = useParams();
 
   const { data: authUser } = useQuery({ queryKey: ["authUser"] });
-
   const {
     data: user,
     isLoading,
@@ -45,28 +44,7 @@ const ProfilePages = () => {
     },
   });
 
-  const { mutate: updateProfile, isPending: isUpdatingProfile } = useMutation({
-    mutationFn: async () => {
-      try {
-        const res = await fetch("/api/users/update", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ profileImg, coverImg }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Something went wrong");
-        return data;
-      } catch (error) {
-        throw new Error(error);
-      }
-    },
-    onSuccess: () => {
-      Promise.all([
-        querClient.invalidateQueries({ queryKey: ["authUser"] }),
-        querClient.invalidateQueries({ queryKey: ["userProfile"] }),
-      ]);
-    },
-  });
+  const { updateProfile, isUpdatingProfile } = useUpdateProfile();
 
   console.log("ini adala user ", user);
   const isMyProfile = authUser?._id === user?._id;
@@ -163,7 +141,7 @@ const ProfilePages = () => {
                 </div>
               </div>
               <div className="flex justify-end px-4 mt-5">
-                {isMyProfile && <EditprofilePages  authUser={authUser}/>}
+                {isMyProfile && <EditprofilePages authUser={authUser} />}
                 {!isMyProfile && (
                   <button
                     className="btn btn-outline rounded-full btn-sm"
@@ -177,9 +155,13 @@ const ProfilePages = () => {
                 {(coverImg || profileImg) && (
                   <button
                     className="btn btn-primary rounded-full btn-sm text-white px-4 ml-2"
-                    onClick={() => updateProfile()}
+                    onClick={async () => {
+                      await updateProfile({ coverImg, profileImg });
+                      setProfileImg(null);
+                      setCoverImg(null);
+                    }}
                   >
-                    {isUpdatingProfile? "Updating..." : "Update"}
+                    {isUpdatingProfile ? "Updating..." : "Update"}
                   </button>
                 )}
               </div>
@@ -187,7 +169,9 @@ const ProfilePages = () => {
               <div className="flex flex-col gap-4 mt-14 px-4">
                 <div className="flex flex-col">
                   <span className="font-bold text-lg">{user?.fullName}</span>
-                  <span className="text-sm text-slate-500">@{user?.email}</span>
+                  <span className="text-sm text-slate-500">
+                    @{user?.username}
+                  </span>
                   <span className="text-sm my-1">{user?.bio}</span>
                 </div>
 

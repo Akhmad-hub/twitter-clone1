@@ -2,7 +2,7 @@ import React from "react";
 import LoadingSpinnerCommon from "./LoadingSpinnerCommon";
 import RightPanelSkeleton from "../skeletons/RightPanelSkeleton";
 import { Link } from "react-router-dom";
-import useFollow from "../../hooks/useFollow";
+import useFollow from "../../hooks/useFollowHook";
 
 const FollowRightCommon = ({ isLoading, suggestedUser }) => {
   const { follow, isPending } = useFollow();
